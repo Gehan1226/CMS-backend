@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/ems
+    url: jdbc:mysql://localhost:3306/cleaning_management_system
     username: root
     password: 1234
 
