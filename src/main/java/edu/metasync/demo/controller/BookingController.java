@@ -1,13 +1,14 @@
 package edu.metasync.demo.controller;
 
 import edu.metasync.demo.dto.booking.BookingCreateRequest;
+import edu.metasync.demo.dto.booking.BookingResponse;
 import edu.metasync.demo.dto.response.SuccessResponse;
+import edu.metasync.demo.dto.response.SuccessResponseWithData;
 import edu.metasync.demo.service.BookingService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,5 +25,16 @@ public class BookingController {
                 .message("Booking created successfully")
                 .build();
     }
+
+    @GetMapping("/{userId}")
+    public SuccessResponseWithData<List<BookingResponse>> getAllBookingsByUser(@PathVariable Long userId) {
+        List<BookingResponse> bookingResponses = bookingService.getAllBookingsByUser(userId);
+        return SuccessResponseWithData.<List<BookingResponse>>builder()
+                .status(200)
+                .message("Bookings retrieved successfully")
+                .data(bookingResponses)
+                .build();
+    }
+
 
 }
