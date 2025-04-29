@@ -2,6 +2,7 @@ package edu.metasync.demo.controller;
 
 import edu.metasync.demo.dto.booking.BookingCreateRequest;
 import edu.metasync.demo.dto.booking.BookingResponse;
+import edu.metasync.demo.dto.booking.BookingUpdateRequest;
 import edu.metasync.demo.dto.response.SuccessResponse;
 import edu.metasync.demo.dto.response.SuccessResponseWithData;
 import edu.metasync.demo.service.BookingService;
@@ -36,5 +37,22 @@ public class BookingController {
                 .build();
     }
 
+    @PutMapping("/{bookingId}")
+    public SuccessResponse updateBooking(@PathVariable Long bookingId,
+                                         @RequestBody BookingUpdateRequest bookingCreateRequest) {
+        bookingService.updateBooking(bookingId, bookingCreateRequest);
+        return SuccessResponse.builder()
+                .status(200)
+                .message("Booking updated successfully")
+                .build();
+    }
 
+    @DeleteMapping("/{bookingId}")
+    public SuccessResponse deleteBooking(@PathVariable Long bookingId) {
+        bookingService.deleteBooking(bookingId);
+        return SuccessResponse.builder()
+                .status(200)
+                .message("Booking deleted successfully")
+                .build();
+    }
 }
