@@ -6,6 +6,7 @@ import edu.metasync.demo.dto.auth.UserLoginRequest;
 import edu.metasync.demo.dto.response.SuccessResponse;
 import edu.metasync.demo.dto.response.SuccessResponseWithData;
 import edu.metasync.demo.service.UserService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,14 +36,21 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public SuccessResponseWithData<AccessToken> login(@Valid @RequestBody UserLoginRequest userLoginRequest,
+    public SuccessResponse login(@Valid @RequestBody UserLoginRequest userLoginRequest,
                                                       BindingResult result, HttpServletResponse response) {
         AccessToken token = userService.authenticateAndGenerateToken(userLoginRequest);
-        return SuccessResponseWithData.<AccessToken>builder()
+
+        Cookie cookie = new Cookie("access_token", token.getToken());
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(3600);
+
+        response.addCookie(cookie);
+
+        return SuccessResponse.builder()
                 .status(HttpStatus.OK.value())
                 .message("User logged in successfully !")
-                .data(token)
                 .build();
     }
-
 }
