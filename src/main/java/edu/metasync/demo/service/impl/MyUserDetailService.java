@@ -16,7 +16,6 @@ public class MyUserDetailService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    @Transactional
     @Override
     public UserDetails loadUserByUsername(String username) {
         UserEntity user = userRepository.findByUserName(username);
