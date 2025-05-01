@@ -7,6 +7,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
@@ -39,41 +40,59 @@ public class JwtFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
-        String token = null;
-        String userName = null;
-
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-            try {
-                userName = jwtService.extractUserName(token);
-            } catch (ExpiredJwtException e) {
-                handleJwtError(response, "Unauthorized: JWT has expired.");
-                return;
-            } catch (MalformedJwtException e) {
-                handleJwtError(response, "Unauthorized: Malformed JWT.");
-                return;
-            } catch (Exception e) {
-                handleJwtError(response, "Unauthorized: Invalid JWT token");
-                return;
-            }
+        String token = extractTokenFromCookies(request);
+        if (token == null) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails =
-                    applicationContext.getBean(MyUserDetailService.class).loadUserByUsername(userName);
-
-            if (jwtService.validateToken(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+        String userName = extractUserNameFromToken(token, response);
+        if (userName == null || SecurityContextHolder.getContext().getAuthentication() != null) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
+        authenticateUser(token, userName, request);
         filterChain.doFilter(request, response);
     }
+
+
+    private String extractTokenFromCookies(HttpServletRequest request) {
+        if (request.getCookies() == null) return null;
+        for (Cookie cookie : request.getCookies()) {
+            if ("accessToken".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
+    }
+
+    private String extractUserNameFromToken(String token, HttpServletResponse response) throws IOException {
+        try {
+            return jwtService.extractUserName(token);
+        } catch (ExpiredJwtException e) {
+            handleJwtError(response, "Unauthorized: JWT has expired.");
+        } catch (MalformedJwtException e) {
+            handleJwtError(response, "Unauthorized: Malformed JWT.");
+        } catch (Exception e) {
+            handleJwtError(response, "Unauthorized: Invalid JWT token.");
+        }
+        return null;
+    }
+
+    private void authenticateUser(String token, String userName, HttpServletRequest request) {
+        UserDetails userDetails = applicationContext.getBean(MyUserDetailService.class)
+                .loadUserByUsername(userName);
+
+        if (jwtService.validateToken(token, userDetails)) {
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
+    }
+
 
     private void handleJwtError(HttpServletResponse response, String errorMessage) throws IOException {
         ErrorResponse errorResponse = ErrorResponse.builder()

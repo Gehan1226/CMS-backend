@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.metasync.demo.dto.auth.AccessToken;
 import edu.metasync.demo.dto.auth.UserCreateRequest;
 import edu.metasync.demo.dto.auth.UserLoginRequest;
+import edu.metasync.demo.dto.auth.UserResponse;
 import edu.metasync.demo.entity.UserEntity;
 import edu.metasync.demo.exception.DataDuplicateException;
+import edu.metasync.demo.exception.DataNotFoundException;
 import edu.metasync.demo.exception.UnexpectedException;
 import edu.metasync.demo.repository.UserRepository;
 import edu.metasync.demo.security.JWTService;
@@ -52,5 +54,16 @@ public class UserServiceImpl implements UserService {
         return new AccessToken(jwtService.generateToken(userLoginRequest.getUserName()));
     }
 
-
+    @Override
+    public UserResponse getUser(String userName) {
+        try {
+            UserEntity userEntity = userRepository.findByUserName(userName);
+            if (userEntity == null) {
+                throw new DataNotFoundException("User with username " + userName + " not found");
+            }
+            return objectMapper.convertValue(userEntity, UserResponse.class);
+        } catch (Exception exception) {
+            throw new UnexpectedException("An unexpected error occurred while retrieving the user");
+        }
+    }
 }

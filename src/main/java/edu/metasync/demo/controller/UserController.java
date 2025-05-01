@@ -3,6 +3,7 @@ package edu.metasync.demo.controller;
 import edu.metasync.demo.dto.auth.AccessToken;
 import edu.metasync.demo.dto.auth.UserCreateRequest;
 import edu.metasync.demo.dto.auth.UserLoginRequest;
+import edu.metasync.demo.dto.auth.UserResponse;
 import edu.metasync.demo.dto.response.SuccessResponse;
 import edu.metasync.demo.dto.response.SuccessResponseWithData;
 import edu.metasync.demo.service.UserService;
@@ -13,10 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,7 +39,7 @@ public class UserController {
         AccessToken token = userService.authenticateAndGenerateToken(userLoginRequest);
 
         Cookie cookie = new Cookie("access_token", token.getToken());
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(true); // for testing purposes, set to true in production
         cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setMaxAge(3600);
@@ -53,4 +51,16 @@ public class UserController {
                 .message("User logged in successfully !")
                 .build();
     }
+
+    @GetMapping("/{userName}")
+    public SuccessResponseWithData<UserResponse> getUser(@PathVariable String userName) {
+        UserResponse user = userService.getUser(userName);
+        return SuccessResponseWithData.<UserResponse>builder()
+                .status(HttpStatus.OK.value())
+                .message("User retrieved successfully !")
+                .data(user)
+                .build();
+    }
+
+
 }
