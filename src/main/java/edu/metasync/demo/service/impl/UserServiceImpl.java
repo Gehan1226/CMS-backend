@@ -15,6 +15,7 @@ import edu.metasync.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -55,7 +56,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse getUser(String userName) {
+    public UserResponse getUser() {
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (userName == null) {
+            throw new DataNotFoundException("User not found in the security context");
+        }
+
         try {
             UserEntity userEntity = userRepository.findByUserName(userName);
             if (userEntity == null) {

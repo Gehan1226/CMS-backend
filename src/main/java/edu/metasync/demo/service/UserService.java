@@ -11,5 +11,5 @@ public interface UserService {
 
     AccessToken authenticateAndGenerateToken(UserLoginRequest userLoginRequest);
 
-    UserResponse getUser(String userName);
+    UserResponse getUser();
 }

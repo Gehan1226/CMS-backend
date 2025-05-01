@@ -38,7 +38,7 @@ public class UserController {
                                                       BindingResult result, HttpServletResponse response) {
         AccessToken token = userService.authenticateAndGenerateToken(userLoginRequest);
 
-        Cookie cookie = new Cookie("access_token", token.getToken());
+        Cookie cookie = new Cookie("accessToken", token.getToken());
         cookie.setHttpOnly(true); // for testing purposes, set to true in production
         cookie.setSecure(true);
         cookie.setPath("/");
@@ -52,15 +52,13 @@ public class UserController {
                 .build();
     }
 
-    @GetMapping("/{userName}")
-    public SuccessResponseWithData<UserResponse> getUser(@PathVariable String userName) {
-        UserResponse user = userService.getUser(userName);
+    @GetMapping()
+    public SuccessResponseWithData<UserResponse> getUser() {
+        UserResponse user = userService.getUser();
         return SuccessResponseWithData.<UserResponse>builder()
                 .status(HttpStatus.OK.value())
                 .message("User retrieved successfully !")
                 .data(user)
                 .build();
     }
-
-
 }
