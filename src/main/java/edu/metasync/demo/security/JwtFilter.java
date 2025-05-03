@@ -52,21 +52,27 @@ public class JwtFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = extractTokenFromCookies(request);
+
         if (token == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String userName = extractUserNameFromToken(token, response);
-        if (userName == null || SecurityContextHolder.getContext().getAuthentication() != null) {
-            filterChain.doFilter(request, response);
+        if (userName == null) {
             return;
         }
 
         authenticateUser(token, userName, request);
         filterChain.doFilter(request, response);
     }
+
 
 
     private String extractTokenFromCookies(HttpServletRequest request) {
