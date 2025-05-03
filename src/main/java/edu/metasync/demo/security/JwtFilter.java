@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -32,6 +33,17 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JWTService jwtService;
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
+
+    private static final List<String> EXCLUDE_URLS = List.of(
+            "/api/v1/auth/login",
+            "/api/v1/auth/refresh"
+    );
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return EXCLUDE_URLS.contains(path);
+    }
 
     @Override
     protected void doFilterInternal(
